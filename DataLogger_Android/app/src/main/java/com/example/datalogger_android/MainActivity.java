@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         Button download = findViewById(R.id.download_button);
+        Button mapBttn = findViewById(R.id.mapButton);
 
         final class workerThread implements Runnable {
 
@@ -151,12 +152,18 @@ public class MainActivity extends AppCompatActivity {
 
                 }
             }
-        };
+        }
 
         download.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 goToFileDownload();
+            }
+        });
+        mapBttn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                goToMapView();
             }
         });
 
@@ -174,22 +181,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if(!mBluetoothAdapter.isEnabled())
+        if(mBluetoothAdapter != null)
         {
-            Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBluetooth, 0);
-        }
-
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-        if(pairedDevices.size() > 0)
-        {
-            for(BluetoothDevice device : pairedDevices)
+            if(!mBluetoothAdapter.isEnabled())
             {
-                if(device.getName().equals("DataLoggerPi")) //Note, you will need to change this to match the name of your device
+                Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBluetooth, 0);
+            }
+
+            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+            if(pairedDevices.size() > 0)
+            {
+                for(BluetoothDevice device : pairedDevices)
                 {
-                    Log.e("Aquarium",device.getName());
-                    mmDevice = device;
-                    break;
+                    if(device.getName().equals("DataLoggerPi")) //Note, you will need to change this to match the name of your device
+                    {
+                        Log.e("Aquarium",device.getName());
+                        mmDevice = device;
+                        break;
+                    }
                 }
             }
         }
@@ -221,6 +231,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void goToFileDownload() {
         Intent intent = new Intent(this, FileDownload.class);
+
+        startActivity(intent);
+    }
+
+    private void goToMapView() {
+        Intent intent = new Intent(this, MapsActivity.class);
 
         startActivity(intent);
     }
