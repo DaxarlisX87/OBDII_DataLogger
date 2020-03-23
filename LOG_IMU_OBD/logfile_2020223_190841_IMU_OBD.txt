@@ -1,0 +1,10 @@
+Pi Time 1582484923.774911 seconds
+OBD Speed 0.0 mph
+OBD RPM 0.0 revolutions_per_minute
+OBD TPS 16.07843137254902 percent
+OBD EngineLoad: 0.0 percent
+OBD TimingAdvance 0.0 degree
+OBD MAF None
+IMU ACCx -78.12608 milli-Gs
+IMU ACCy 79.835088 milli-Gs
+IMU ACCz 985.853472 milli-Gs
