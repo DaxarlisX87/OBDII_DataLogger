@@ -1,13 +1,16 @@
 package com.example.datalogger_android;
 
+import android.os.Build;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.os.Environment;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,12 +18,21 @@ import android.content.Intent;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 // For Bluetooth Connectivity
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.FilterWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 import android.bluetooth.BluetoothAdapter;
@@ -30,6 +42,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 public class MainActivity extends AppCompatActivity {
 
     BluetoothSocket mmSocket;
@@ -37,6 +53,9 @@ public class MainActivity extends AppCompatActivity {
 
     final byte delimiter = 33;
     int readBufferPosition = 0;
+    private ArrayList<String> Filelist;
+    private String[] DownloadMessages;
+    private String downloadFilename;
 
 
     public void sendBtMsg(String msg2send){
@@ -73,8 +92,10 @@ public class MainActivity extends AppCompatActivity {
 
 
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
+        Button files = findViewById(R.id.list_button);
         Button download = findViewById(R.id.download_button);
+        download.setEnabled(false);
+        Button connect = findViewById(R.id.connect_button);
         Button mapBttn = findViewById(R.id.mapButton);
 
         final class workerThread implements Runnable {
@@ -104,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
                         {
 
                             byte[] packetBytes = new byte[bytesAvailable];
-                            Log.e("Aquarium recv bt","bytes available" + bytesAvailable);
+                            Log.e("DataLogger recv bt","bytes available" + bytesAvailable);
                             byte[] readBuffer = new byte[1024];
                             mmInputStream.read(packetBytes);
 
@@ -113,18 +134,65 @@ public class MainActivity extends AppCompatActivity {
                                 byte b = packetBytes[i];
                                 if(b == delimiter)
                                 {
-                                    Log.e("Aquarium recv bt","delimiter reached at:" + i);
+                                    Log.e("DataLogger recv bt","delimiter reached at:" + i);
                                     byte[] encodedBytes = new byte[readBufferPosition];
                                     System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
                                     final String data = new String(encodedBytes, "US-ASCII");
                                     readBufferPosition = 0;
 
                                     //The variable data now contains our full command
+
+                                    if(btMsg.equals("logfiles!")) Filelist = new ArrayList<String>(Arrays.asList(data.split(" ")));
+                                    if(btMsg.contains("download")) {
+                                        DownloadMessages = data.split("#");
+                                        String filename =  downloadFilename + "_IMU_OBD.txt";
+                                        String filepath = "/Download/DataLoggerPi/";
+
+                                        File file = new File(filepath, "LOG_IMU_OBD");
+
+                                        if (!file.exists()) {
+                                            file.mkdirs();
+                                            Log.e("DataLogger mkdirs", filepath + "LOG_IMU_OBD");
+                                        }
+                                        try {
+                                            File gpxfile = new File(file, filename);
+                                            FileWriter writer = new FileWriter(gpxfile);
+                                            writer.append(DownloadMessages[0]);
+                                            writer.flush();
+                                            writer.close();
+                                        } catch (Exception e) { }
+
+                                        //Write GPS Data
+                                        filepath =  downloadFilename + "_GPS.txt";
+
+                                        file = new File(filepath, "LOG_GPS");
+                                        if (!file.exists()) {
+                                            file.mkdirs();
+                                        }
+                                        try {
+                                            File gpxfile = new File(file, filename);
+                                            FileWriter writer = new FileWriter(gpxfile);
+                                            writer.append(DownloadMessages[1]);
+                                            writer.flush();
+                                            writer.close();
+                                        } catch (Exception e) { }
+
+                                    }
                                     handler.post(new Runnable()
                                     {
                                         public void run()
                                         {
-                                            myLabel.setText(data);
+                                            if(btMsg.equals("logfiles!")) {
+                                                if(Filelist == null) {
+                                                    myLabel.setText(R.string.no_files_found);
+                                                    Log.e("DataLogger Crt List", "No Files Found");
+                                                }
+                                                else Log.e("DataLogger Crt List", Filelist.toString());
+                                            }
+                                            else if(btMsg.contains("download!")) {
+                                                myLabel.setText(DownloadMessages[2]);
+                                            }
+                                            else myLabel.setText(data);
                                         }
                                     });
 
@@ -154,10 +222,31 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        files.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Thread fileThread = (new Thread(new workerThread("logfiles!")));
+                fileThread.start();
+                try {
+                    fileThread.join();
+                }
+                catch (Exception e){
+                }
+                goToFileDownload(Filelist);
+            }
+        });
+
         download.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                goToFileDownload();
+                Thread fileThread = (new Thread(new workerThread("download! " + downloadFilename)));
+                fileThread.start();
+                try {
+                    fileThread.join();
+                }
+                catch (Exception e){
+                }
+
             }
         });
         mapBttn.setOnClickListener(new View.OnClickListener() {
@@ -167,15 +256,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        connect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                (new Thread(new workerThread("connect!"))).start();
+            }
+        });
+
         ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButton);
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     // The toggle is enabled
-                    (new Thread(new workerThread("start"))).start();
+                    (new Thread(new workerThread("start!"))).start();
                 } else {
                     // The toggle is disabled
-                    (new Thread(new workerThread("stop"))).start();
+                    (new Thread(new workerThread("stop!"))).start();
 
                 }
             }
@@ -205,6 +301,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+
     }
 
     @Override
@@ -229,10 +326,12 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void goToFileDownload() {
-        Intent intent = new Intent(this, FileDownload.class);
+    private void goToFileDownload(ArrayList<String> availableFiles) {
+        Log.e("DataLogger FileList", availableFiles.toString());
+        Intent intent = new Intent(this, DownloadActivity.class);
+        intent.putStringArrayListExtra("Files", availableFiles);
 
-        startActivity(intent);
+        startActivityForResult(intent, 1);
     }
 
     private void goToMapView() {
@@ -241,6 +340,40 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    @Override
+    protected void onActivityResult (int requestCode, int resultCode, Intent data){//..code}
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            if(resultCode == RESULT_OK) {
+                final TextView myLabel = (TextView) findViewById(R.id.btResult);
+                String result = data.getStringExtra("result");
+                Log.e("DataLogger FileList", result);
+                myLabel.setText(result);
+                downloadFilename = result;
+                Button download = findViewById(R.id.download_button);
+                download.setEnabled(true);
+            }
+            if(resultCode == RESULT_CANCELED) {
+                downloadFilename = null;
+            }
 
+        }
+    }
 
+    public void generateNoteOnSD(String sFileName, String sBody) {
+        try {
+            File root = new File(Environment.getExternalStorageDirectory(), "Notes");
+            if (!root.exists()) {
+                root.mkdirs();
+            }
+            File gpxfile = new File(root, sFileName);
+            FileWriter writer = new FileWriter(gpxfile);
+            writer.append(sBody);
+            writer.flush();
+            writer.close();
+            Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
