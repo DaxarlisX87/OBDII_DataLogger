@@ -146,36 +146,53 @@ public class MainActivity extends AppCompatActivity {
                                     if(btMsg.contains("download")) {
                                         DownloadMessages = data.split("#");
                                         String filename =  downloadFilename + "_IMU_OBD.txt";
-                                        String filepath = "/Download/DataLoggerPi/";
+                                        String filepath = getFilesDir().toString() + "/LOG_IMU_OBD/";
 
-                                        File file = new File(filepath, "LOG_IMU_OBD");
+                                        Log.e("DataLogger Create Files", "Creating files at: " + filepath);
 
+                                        File file = new File(filepath);
                                         if (!file.exists()) {
-                                            file.mkdirs();
-                                            Log.e("DataLogger mkdirs", filepath + "LOG_IMU_OBD");
+                                            if(file.mkdir()) {
+                                                Log.e("DataLogger mkdirs", "IMU Directory Created Successfully");
+                                            }
+                                            else {
+                                                Log.e("DataLogger mkdirs", "IMU Directory Creation Failed");
+                                            }
                                         }
                                         try {
-                                            File gpxfile = new File(file, filename);
-                                            FileWriter writer = new FileWriter(gpxfile);
-                                            writer.append(DownloadMessages[0]);
-                                            writer.flush();
-                                            writer.close();
-                                        } catch (Exception e) { }
-
-                                        //Write GPS Data
-                                        filepath =  downloadFilename + "_GPS.txt";
-
-                                        file = new File(filepath, "LOG_GPS");
-                                        if (!file.exists()) {
-                                            file.mkdirs();
-                                        }
-                                        try {
-                                            File gpxfile = new File(file, filename);
-                                            FileWriter writer = new FileWriter(gpxfile);
+                                            File logfile = new File(file, filename);
+                                            logfile.createNewFile();
+                                            FileWriter writer = new FileWriter(logfile);
                                             writer.append(DownloadMessages[1]);
                                             writer.flush();
                                             writer.close();
-                                        } catch (Exception e) { }
+                                        } catch (Exception e) {
+                                            Log.e("DataLogger mkdirs", "IMU File Creation Failed: " + e);
+                                        }
+
+                                        //Write GPS Data
+                                        filename =  downloadFilename + "_GPS.txt";
+                                        filepath = getFilesDir().toString() + "/LOG_GPS/";
+
+                                        file = new File(filepath);
+                                        if (!file.exists()) {
+                                            if(file.mkdir()) {
+                                                Log.e("DataLogger mkdirs", "GPS Directory Created Successfully");
+                                            }
+                                            else {
+                                                Log.e("DataLogger mkdirs", "GPS Directory Creation Failed");
+                                            }
+                                        }
+                                        try {
+                                            File logfile = new File(file, filename);
+                                            logfile.createNewFile();
+                                            FileWriter writer = new FileWriter(logfile);
+                                            writer.append(DownloadMessages[1]);
+                                            writer.flush();
+                                            writer.close();
+                                        } catch (Exception e) {
+                                            Log.e("DataLogger mkdirs", "GPS File Creation Failed: " + e);
+                                        }
 
                                     }
                                     handler.post(new Runnable()
