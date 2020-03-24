@@ -97,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
         download.setEnabled(false);
         Button connect = findViewById(R.id.connect_button);
         Button mapBttn = findViewById(R.id.mapButton);
+        Button viewDownloaded = findViewById(R.id.viewDownloaded);
 
         final class workerThread implements Runnable {
 
@@ -222,6 +223,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        viewDownloaded.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                goToDownloadListView();
+            }
+        });
+
         files.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -336,6 +344,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void goToMapView() {
         Intent intent = new Intent(this, MapsActivity.class);
+
+        startActivity(intent);
+    }
+
+    private void goToDownloadListView() {
+        Intent intent = new Intent(this, DataList.class);
 
         startActivity(intent);
     }

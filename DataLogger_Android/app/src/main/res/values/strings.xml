@@ -10,4 +10,7 @@
     <string name="no_data">No Data Received</string>
     <string name="title_activity_maps">Map</string>
     <string name="mapView">View Map</string>
+    <string name="viewDownloaded">View Downloaded Files</string>
+    <string name="connectOBD">Connect OBDII Reader</string>
+    <string name="selLog">Select Logfile</string>
 </resources>

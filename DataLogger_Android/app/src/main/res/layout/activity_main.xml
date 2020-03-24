@@ -45,7 +45,8 @@
         android:layout_below="@+id/btResult"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="25dp"
-        android:text="Connect OBDII Reader" />
+        android:text="@string/connectOBD" />
+
     <Button
         android:id="@+id/list_button"
         android:layout_width="wrap_content"
@@ -53,7 +54,7 @@
         android:layout_below="@+id/toggleButton"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="25dp"
-        android:text="Select Logfile" />
+        android:text="@string/selLog" />
 
     <Button
         android:id="@+id/download_button"
@@ -81,6 +82,19 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="25dp"
         android:text="@string/mapView" />
+
+    <Button
+        android:id="@+id/viewDownloaded"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/mapButton"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="25dp"
+        android:layout_marginEnd="106dp"
+        android:layout_marginRight="106dp"
+        android:text="@string/viewDownloaded" />
 
 
 </RelativeLayout>
