@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         Button download = findViewById(R.id.download_button);
         download.setEnabled(false);
         Button connect = findViewById(R.id.connect_button);
-        Button mapBttn = findViewById(R.id.mapButton);
+        //Button mapBttn = findViewById(R.id.mapButton);
         Button viewDownloaded = findViewById(R.id.viewDownloaded);
 
         final class workerThread implements Runnable {
@@ -274,12 +274,12 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-        mapBttn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                goToMapView();
-            }
-        });
+//        mapBttn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                goToMapView();
+//            }
+//        });
 
         connect.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -357,12 +357,6 @@ public class MainActivity extends AppCompatActivity {
         intent.putStringArrayListExtra("Files", availableFiles);
 
         startActivityForResult(intent, 1);
-    }
-
-    private void goToMapView() {
-        Intent intent = new Intent(this, MapsActivity.class);
-
-        startActivity(intent);
     }
 
     private void goToDownloadListView() {

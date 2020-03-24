@@ -75,25 +75,12 @@
         android:text="@string/no_data" />
 
     <Button
-        android:id="@+id/mapButton"
+        android:id="@+id/viewDownloaded"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/download_button"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="25dp"
-        android:text="@string/mapView" />
-
-    <Button
-        android:id="@+id/viewDownloaded"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/mapButton"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="25dp"
-        android:layout_marginEnd="106dp"
-        android:layout_marginRight="106dp"
         android:text="@string/viewDownloaded" />
 
 
