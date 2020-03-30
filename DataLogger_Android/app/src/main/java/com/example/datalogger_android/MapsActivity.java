@@ -71,7 +71,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Intent intent = getIntent();
         String filename = intent.getStringExtra("filename");
         File f = new File(getFilesDir().toString()+"/LOG_GPS/"+filename);
-        File fImuObd = new File(getFilesDir().toString()+"/LOG_IMU_OBD/"+filename);
+        File fImuObd = new File(getFilesDir().toString()+"/LOG_IMU_OBD/"+filename.substring(0,filename.length()-7)+"IMU_OBD.txt");
 //        ArrayList<ArrayList<Double>> gpsData = new ArrayList<ArrayList<Double>>();
 //        ArrayList<ArrayList<Double>> imuObdData = new ArrayList<ArrayList<Double>>();
 //        ArrayList<PolylineOptions> routeData = new ArrayList<PolylineOptions>();
