@@ -49,7 +49,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        final double minSpeed = 0.0, maxSpeed = 100.0;
+        final double minSpeed = 0.0, maxSpeed = 60.0;
         final int[] colorValues = {0xFF0000FF, 0xFF0080FF, 0xFF00FFFF, 0xFF00FF80, 0xFF00FF00, 0xFF80FF00, 0xFFFFFF00, 0xFFFF8000, 0xFFFF0000};
         final int numColorLevels = colorValues.length;
         final double colorStep = (maxSpeed-minSpeed)/numColorLevels;
@@ -77,7 +77,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     thisLine2 = br2.readLine();
                     dataArr = thisLine.split(",", 0);
                     mmuObdArr = thisLine2.split(",",0);
-                    thisSpeed = Double.parseDouble(mmuObdArr[0]);
+                    thisSpeed = Double.parseDouble(mmuObdArr[1]);
 
                     lat = convertDMS2Dec(dataArr[1]);
                     lon = convertDMS2Dec(dataArr[2]);
