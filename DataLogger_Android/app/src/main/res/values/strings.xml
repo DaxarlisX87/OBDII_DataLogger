@@ -13,4 +13,6 @@
     <string name="viewDownloaded">View Downloaded Files</string>
     <string name="connectOBD">Connect OBDII Reader</string>
     <string name="selLog">Select Logfile</string>
+    <string name="speed">Speed</string>
+    <string name="mpg">MPG</string>
 </resources>

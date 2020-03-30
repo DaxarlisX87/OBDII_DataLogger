@@ -1,9 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:map="http://schemas.android.com/apk/res-auto"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/map"
-    android:name="com.google.android.gms.maps.SupportMapFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MapsActivity" />
+    tools:context=".MapsActivity">
+
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:map="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MapsActivity" />
+
+<!--    <Button-->
+<!--        android:id="@+id/viewDownloaded"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_alignBottom="@id/map"-->
+<!--        android:layout_centerHorizontal="true"-->
+<!--        android:layout_marginStart="25dp"-->
+<!--        android:layout_marginLeft="25dp"-->
+<!--        android:layout_marginEnd="25dp"-->
+<!--        android:layout_marginRight="25dp"-->
+<!--        android:layout_marginBottom="25dp"-->
+<!--        android:text="@string/speed" />-->
+    <LinearLayout android:id="@+id/LinearLayoutTop"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_alignBottom="@id/map"
+        android:layout_marginBottom="20dp"
+        android:gravity="center">
+
+        <LinearLayout android:id="@+id/LinearLayout01"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:gravity="center">
+            <Button
+                android:id="@+id/colorSpeed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/speed" />
+
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/LinearLayout02"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:gravity="center">
+            <Button
+                android:id="@+id/colorMPG"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mpg" />
+
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>
