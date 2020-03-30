@@ -3,6 +3,7 @@ package com.example.datalogger_android;
 import androidx.fragment.app.FragmentActivity;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -48,32 +49,58 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        final double minSpeed = 0.0, maxSpeed = 100.0;
+        final int[] colorValues = {0xFF0000FF, 0xFF0080FF, 0xFF00FFFF, 0xFF00FF80, 0xFF00FF00, 0xFF80FF00, 0xFFFFFF00, 0xFFFF8000, 0xFFFF0000};
+        final int numColorLevels = colorValues.length;
+        final double colorStep = (maxSpeed-minSpeed)/numColorLevels;
         mMap = googleMap;
         Intent intent = getIntent();
         String filename = intent.getStringExtra("filename");
         File f = new File(getFilesDir().toString()+"/LOG_GPS/"+filename);
+        File fImuObd = new File(getFilesDir().toString()+"/LOG_IMU_OBD/"+filename);
         double first_lat = 0, first_lon = 0;
         boolean firstLoop = true;
+        Polyline polyline1;
         if(f.exists()) {
             BufferedReader br = null;
+            BufferedReader br2 = null;
             try {
                 br = new BufferedReader(new FileReader(f));
+                br2 = new BufferedReader(new FileReader(fImuObd));
                 PolylineOptions plo = (new PolylineOptions()).clickable(true);
 
                 String thisLine = br.readLine(); // read in header line
-                double lat, lon;
-                String[] dataArr;
+                String thisLine2 = br2.readLine(); // read in header line
+                double lat, lon, lastLat = 0, lastLon = 0, thisSpeed;
+                String[] dataArr, mmuObdArr;
                 while ((thisLine = br.readLine()) != null) {
+                    thisLine2 = br2.readLine();
                     dataArr = thisLine.split(",", 0);
+                    mmuObdArr = thisLine2.split(",",0);
+                    thisSpeed = Double.parseDouble(mmuObdArr[0]);
+
                     lat = convertDMS2Dec(dataArr[1]);
                     lon = convertDMS2Dec(dataArr[2]);
                     lon = -lon;
-                    plo.add(new LatLng(lat, lon));
+                    //plo.add(new LatLng(lat, lon));
                     if(firstLoop){
                         first_lat = lat;
                         first_lon = lon;
                         firstLoop = false;
+                    }else{
+                        plo.add(new LatLng(lastLat, lastLon), new LatLng(lat, lon));
+                        for(int i = numColorLevels-1; i >= 0; i--){
+                            if(thisSpeed > i*colorStep){
+                                plo.color(colorValues[i]);
+                                break;
+                            }
+                        }
+//                        plo.color(Color.BLUE);
+                        polyline1 = googleMap.addPolyline(plo);
+                        plo = (new PolylineOptions()).clickable(true);
                     }
+                    lastLat = lat;
+                    lastLon = lon;
                 }
                 // Add a marker in Sydney and move the camera
                 //LatLng sydney = new LatLng(-34, 151);
@@ -82,7 +109,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // use PolylineOptions's .add() or addAll() to add points before displaying
                 // override onPolylineClick() method to make something happen when clicked
-                Polyline polyline1 = googleMap.addPolyline(plo);
+//                Polyline polyline1 = googleMap.addPolyline(plo);
 
             } catch (IOException e) {
                 e.printStackTrace();
