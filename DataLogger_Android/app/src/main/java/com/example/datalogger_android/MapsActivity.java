@@ -13,6 +13,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -162,6 +163,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         mMap.moveCamera(CameraUpdateFactory.zoomTo((float) 15));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(first_lat, first_lon)));
+        ArrayList<DrivingEvent> drivingEvents = DrivingAnalyzer.drivingAnalysis(imuObdData, gpsData);
+
+        MarkerOptions mrko;
+        for(DrivingEvent event: drivingEvents) {
+            mrko = new MarkerOptions();
+            mrko.position(new LatLng(event.getLatitude(), event.getLongitude()));
+            mrko.flat(true);
+            if(event.getType().equals("BadMPG")) {
+                mrko.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+            }else if(event.getType().equals("Launch")){
+                mrko.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+//                mMap.addMarker(mrko);
+            }
+            mMap.addMarker(mrko);
+        }
 
         analysisDone = true;
     }
@@ -235,7 +251,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //color threshold
             for(int k = numColorLevels-1; k >= 0; k--){
                 if(estMPG > k*colorMPGStep){
-                    routeData.get(i).setColor(colorValues[k]);
+                    routeData.get(i).setColor(colorValues[numColorLevels-1-k]);
                     break;
                 }
             }
