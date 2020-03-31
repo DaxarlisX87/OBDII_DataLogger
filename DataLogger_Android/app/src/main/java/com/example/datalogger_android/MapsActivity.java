@@ -33,9 +33,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private ArrayList<ArrayList<Double>> imuObdData = new ArrayList<ArrayList<Double>>();
     private ArrayList<Polyline> routeData = new ArrayList<Polyline>();
     private final double minSpeed = 0.0, maxSpeed = 60.0;
+    private final double minMPG = 0.0, maxMPG = 60.0;
     private final int[] colorValues = {0xFF0000FF, 0xFF0080FF, 0xFF00FFFF, 0xFF00FF80, 0xFF00FF00, 0xFF80FF00, 0xFFFFFF00, 0xFFFF8000, 0xFFFF0000};
     private final int numColorLevels = colorValues.length;
-    private final double colorStep = (maxSpeed-minSpeed)/numColorLevels;
+    private final double colorSpeedStep = (maxSpeed-minSpeed)/numColorLevels;
+    private final double colorMPGStep = (maxMPG-minMPG)/numColorLevels;
     private boolean analysisDone = false;
 
     @Override
@@ -51,6 +53,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 displaySpeed();
+            }
+        });
+        Button mpgBtn = findViewById(R.id.colorMPG);
+        mpgBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                displayMPG();
             }
         });
     }
@@ -188,7 +197,44 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
             //color threshold
             for(int k = numColorLevels-1; k >= 0; k--){
-                if(speed > k*colorStep){
+                if(speed > k*colorSpeedStep){
+                    routeData.get(i).setColor(colorValues[k]);
+                    break;
+                }
+            }
+        }
+    }
+    private void displayMPG(){
+        if(!analysisDone){
+            return;
+        }
+        //for each segment of the route
+        ArrayList<Double> oneAL;
+        double estMPG, maf, speed;
+        int prevIndex = 0;// next gps data point will always map to same imuObd data point or later because both lists are sorted by time
+        for(int i = 0; i < routeData.size(); i++){
+            //determine time to use as lookup
+            double time = gpsData.get(i).get(0);
+            //lookup in obd AL
+            estMPG = minMPG;
+            for(int j = prevIndex; j < imuObdData.size(); j++){
+                oneAL = imuObdData.get(j);
+                if(oneAL.get(0) > time){
+                    speed = oneAL.get(1);
+                    maf = oneAL.get(6);
+                    estMPG = (maf/(14.7*454*6.701)*2600)*speed;
+                    prevIndex = j;
+                    break;
+                }
+            }
+            if(time > imuObdData.get(imuObdData.size()-1).get(0)){
+                speed = imuObdData.get(imuObdData.size()-1).get(1);
+                maf = imuObdData.get(imuObdData.size()-1).get(6);
+                estMPG = (maf/(14.7*454*6.701)*2600)*speed;
+            }
+            //color threshold
+            for(int k = numColorLevels-1; k >= 0; k--){
+                if(estMPG > k*colorMPGStep){
                     routeData.get(i).setColor(colorValues[k]);
                     break;
                 }
