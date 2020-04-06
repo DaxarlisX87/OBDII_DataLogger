@@ -150,8 +150,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     oneAL = new ArrayList<Double>();
                     dataArr = thisLine.split(",", 0);
 
-                    for(int i = 0; i < dataArr.length; i++) {
-                        data = Double.parseDouble(dataArr[i]);
+                    for (String s : dataArr) {
+                        data = Double.parseDouble(s);
                         oneAL.add(data);
                     }
                     imuObdData.add(oneAL);
@@ -174,6 +174,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mrko.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
             }else if(event.getType().equals("Launch")){
                 mrko.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+                mrko.zIndex(999999);
 //                mMap.addMarker(mrko);
             }
             mMap.addMarker(mrko);
