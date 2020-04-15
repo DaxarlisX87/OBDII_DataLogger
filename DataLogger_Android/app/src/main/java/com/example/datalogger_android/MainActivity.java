@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> Filelist;
     private String[] DownloadMessages;
     private String downloadFilename;
+    private String inputData = new String("");
 
 
     public void sendBtMsg(String msg2send){
@@ -122,17 +123,28 @@ public class MainActivity extends AppCompatActivity {
                         final InputStream mmInputStream;
                         mmInputStream = mmSocket.getInputStream();
                         bytesAvailable = mmInputStream.available();
+
                         if(bytesAvailable > 0)
                         {
 
                             byte[] packetBytes = new byte[bytesAvailable];
                             Log.e("DataLogger recv bt","bytes available" + bytesAvailable);
-                            byte[] readBuffer = new byte[1024];
+                            byte[] readBuffer = new byte[1048576];
                             mmInputStream.read(packetBytes);
+
+
 
                             for(int i=0;i<bytesAvailable;i++)
                             {
                                 byte b = packetBytes[i];
+                                if(i % 10 == 0) {
+                                    Log.e("DataLogger recv bt", "reading data at:" + i);
+                                    Log.e("DataLogger recv bt", "readbuffer:" + readBufferPosition);
+                                    //Log.e("DataLogger recv bt", "data at:" + (char) b);
+                                }
+
+                                if(b != delimiter) inputData = inputData + (char)b;
+
                                 if(b == delimiter)
                                 {
                                     Log.e("DataLogger recv bt","delimiter reached at:" + i);
@@ -141,11 +153,18 @@ public class MainActivity extends AppCompatActivity {
                                     final String data = new String(encodedBytes, "US-ASCII");
                                     readBufferPosition = 0;
 
+                                    Log.e("DataLogger recv bt","data at:" + data);
+                                    Log.e("DataLogger recv bt","data at:" + inputData);
+
+
+
+
                                     //The variable data now contains our full command
 
                                     if(btMsg.equals("logfiles!")) Filelist = new ArrayList<String>(Arrays.asList(data.split(" ")));
                                     if(btMsg.contains("download")) {
-                                        DownloadMessages = data.split("#");
+                                        Log.e("DataLogger recv bt","data at:" + inputData);
+                                        DownloadMessages = inputData.split("#");
                                         String filename =  downloadFilename + "_IMU_OBD.txt";
                                         String filepath = getFilesDir().toString() + "/LOG_IMU_OBD/";
 
@@ -164,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
                                             File logfile = new File(file, filename);
                                             logfile.createNewFile();
                                             FileWriter writer = new FileWriter(logfile);
-                                            writer.append(DownloadMessages[1]);
+                                            writer.append(DownloadMessages[0]);
                                             writer.flush();
                                             writer.close();
                                         } catch (Exception e) {
@@ -208,12 +227,13 @@ public class MainActivity extends AppCompatActivity {
                                                 else Log.e("DataLogger Crt List", Filelist.toString());
                                             }
                                             else if(btMsg.contains("download!")) {
-                                                myLabel.setText(DownloadMessages[2]);
+
+                                                myLabel.setText(DownloadMessages[DownloadMessages.length - 1]);
                                             }
                                             else myLabel.setText(data);
                                         }
                                     });
-
+                                    inputData = "";
                                     workDone = true;
                                     break;
 

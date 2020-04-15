@@ -42,7 +42,7 @@ public class DrivingAnalyzer {
 //            System.out.println("Speed: " + speedArr[i] + " RPM: " + rpmArr[i]);
             if(speedArr[i] == 0) {
 //                System.out.println("At Zero Speed");
-                zeroSpeed = windowSize / 2;
+                zeroSpeed = windowSize - windowStep;
             }
             if(zeroSpeed > 0) {
                 if (IMU_OBDII_Data.get(i).get(7) > launchLimit) {
@@ -129,6 +129,8 @@ public class DrivingAnalyzer {
 
             }
             i = (i + windowStep) % (windowSize+windowStep);
+            zeroSpeed--;
+
 
             oldAverage = averageQuotient;
             averageQuotient = updateWindowAverage(quotientArr, averageQuotient, windowSize, windowStep, arrStart, i);
