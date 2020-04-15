@@ -20,10 +20,16 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import libsvm.svm;
+import libsvm.svm_model;
+import libsvm.svm_node;
+
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -81,7 +87,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Intent intent = getIntent();
         String filename = intent.getStringExtra("filename");
         File f = new File(getFilesDir().toString()+"/LOG_GPS/"+filename);
-        File fImuObd = new File(getFilesDir().toString()+"/LOG_IMU_OBD/"+filename.substring(0,filename.length()-7)+"IMU_OBD.txt");
+        String imuFilename = getFilesDir().toString()+"/LOG_IMU_OBD/"+filename.substring(0,filename.length()-7)+"IMU_OBD.txt";
+        File fImuObd = new File(imuFilename);
 //        ArrayList<ArrayList<Double>> gpsData = new ArrayList<ArrayList<Double>>();
 //        ArrayList<ArrayList<Double>> imuObdData = new ArrayList<ArrayList<Double>>();
 //        ArrayList<PolylineOptions> routeData = new ArrayList<PolylineOptions>();
@@ -133,6 +140,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // use PolylineOptions's .add() or addAll() to add points before displaying
                 // override onPolylineClick() method to make something happen when clicked
 //                Polyline polyline1 = googleMap.addPolyline(plo);
+                br.close();
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -156,6 +164,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                     imuObdData.add(oneAL);
                 }
+                br2.close();
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -179,8 +188,147 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
             mMap.addMarker(mrko);
         }
+        svm_model loadedModel;
+        try {
+            loadedModel = svm.svm_load_model(getFilesDir().toString()+"/model.model");
+            ArrayList<ArrayList<svm_node>> dataset = makeDataset(imuFilename);
+//            nodeList.toArray(new svm_node[nodeList.size()]);
+            ArrayList<Double> predictions = new ArrayList<>();
+            svm_node[] oneNodeSet;
+//            Log.d("PREDICTIONS",dataset.size()+" "+dataset.get(0).size());
+            for(int i = 0; i < dataset.size(); i++) {
+                oneNodeSet = dataset.get(i).toArray(new svm_node[dataset.get(i).size()]);
+                double d = svm.svm_predict(loadedModel, oneNodeSet);
+//                Log.d("PREDICTIONS","i = "+ i +" Predict: "+d);
+                predictions.add(d);
+            }
+        } catch (IOException e) {
+//            Log.d("PREDICTIONS","error");
+            e.printStackTrace();
+        }
 
         analysisDone = true;
+    }
+    public static ArrayList<ArrayList<svm_node>> makeDataset(String filen) {
+        String thisLine;
+        ArrayList<ArrayList<svm_node>> nodeList = new ArrayList<>();
+        ArrayList<svm_node> oneList = new ArrayList<>();
+        final int window = 10;
+        final int shift = 2;
+        double[][] windowdata = new double[window][10];
+        String[] Lines = new String[shift];
+//        String classifier = "-1";
+//
+//        if(args[0].toLowerCase().equals("aggressive")) {
+//            classifier = "+1";
+//        }
+
+        try{
+
+            File file=new File(filen);
+            File outfile=new File("drivingDataset");
+            BufferedReader br=new BufferedReader(new FileReader(file));
+//            BufferedWriter bw = new BufferedWriter(new FileWriter(outfile));
+
+            int i = 0;
+            thisLine = br.readLine(); // read in header line
+            while((thisLine = br.readLine()) != null && i < window){
+
+                windowdata[i] = (toDoubleArr(thisLine.split(",")));
+                //System.out.println(windowdata[i].toString());
+
+                i++;
+            }
+
+            if(i < window) {
+                Log.d("PREDICTIONS","File Not big enough to create dataset");
+                return null;
+            }
+            else {
+//                bw.write(classifier);
+                int index = 1;
+                for(int r = 0; r < window; r++) {
+                    for(int c = 1; c < 10; c++) {
+//                        String output = " " + (index) + ":" + windowdata[r][c];
+//                        System.out.println(output);
+//                        bw.append(output);
+                        svm_node thisNode = new svm_node();
+                        thisNode.index = index;
+                        thisNode.value = windowdata[r][c];
+                        oneList.add(thisNode);
+                        index++;
+                    }
+                }
+                nodeList.add(oneList);
+                oneList = new ArrayList<>();
+//                bw.newLine();
+                //bw.write("This is a Test");
+            }
+            boolean shiftWindow = true;
+            while(shiftWindow){
+                for(int s = 0; s < shift; s++) {
+                    if((Lines[s] = br.readLine()) == null) {
+                        shiftWindow = false;
+                        break;
+                    }
+                }
+                if(!shiftWindow) break;
+
+                for(int s = 0; s < (window - shift); s++) {
+                    windowdata[s] = windowdata[s + shift];
+                }
+
+                for(int s = 0; s < shift; s++) {
+                    windowdata[window + s - shift] = toDoubleArr(Lines[s].split(","));
+                }
+
+	        	/*windowdata[0] = windowdata[2];
+	        	windowdata[1] = windowdata[3];
+	        	windowdata[2] = windowdata[4];
+	        	windowdata[3] = windowdata[5];
+	        	windowdata[4] = windowdata[6];
+	        	windowdata[5] = windowdata[7];
+	        	windowdata[6] = windowdata[8];
+	        	windowdata[7] = windowdata[9];
+	        	windowdata[8] = (toDoubleArr(thisLine.split(",")));
+	        	windowdata[9] = (toDoubleArr(nextLine.split(",")));*/
+//                bw.write(classifier);
+                int index = 1;
+                for(int r = 0; r < window; r++) {
+                    for(int c = 1; c < 10; c++) {
+//                        String output = " " + (index) + ":" + windowdata[r][c];
+//                        System.out.println(output);
+//                        bw.append(output);
+                        svm_node thisNode = new svm_node();
+                        thisNode.index = index;
+                        thisNode.value = windowdata[r][c];
+                        oneList.add(thisNode);
+                        index++;
+                    }
+                }
+//                bw.newLine();
+                nodeList.add(oneList);
+                oneList = new ArrayList<>();
+            }
+
+            System.out.println("Closing Files");
+            br.close();
+//            bw.close();
+        }catch(Exception e){
+            System.out.println(e);
+        }
+
+        return nodeList;
+
+    }
+
+    public static double[] toDoubleArr(String[] values) {
+        double doubles[] = new double[values.length];
+        for(int i = 0; i < values.length; i++) {
+            doubles[i] = Double.parseDouble(values[i]);
+        }
+
+        return doubles;
     }
     private double convertDMS2Dec(String s){
         String[] arr = s.split("\\.", 0);
