@@ -245,6 +245,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             mrko.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
                             aMarker = mMap.addMarker(mrko);
                             aggressiveMarkers.add(aMarker);
+                            break;
                         }
                     }
                 }
