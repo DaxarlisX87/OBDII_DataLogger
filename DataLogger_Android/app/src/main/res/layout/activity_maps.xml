@@ -31,8 +31,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_width="fill_parent"
-        android:layout_alignBottom="@id/map"
-        android:layout_marginBottom="20dp"
+        android:layout_alignBottom="@id/LinearLayoutBot"
+        android:layout_marginBottom="60dp"
         android:gravity="center">
 
         <LinearLayout android:id="@+id/LinearLayout01"
@@ -60,6 +60,55 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/mpg" />
+
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:id="@+id/LinearLayoutBot"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_alignBottom="@id/map"
+        android:layout_marginBottom="20dp"
+        android:gravity="center">
+
+        <LinearLayout android:id="@+id/LinearLayout03"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:gravity="center">
+            <Button
+                android:id="@+id/toggleLaunch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/toggleLaunch" />
+
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/LinearLayout04"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:gravity="center">
+            <Button
+                android:id="@+id/toggleAggressive"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/toggleAggressive" />
+
+        </LinearLayout>
+        <LinearLayout android:id="@+id/LinearLayout05"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:gravity="center">
+            <Button
+                android:id="@+id/toggleMpg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/toggleMpg" />
 
         </LinearLayout>
     </LinearLayout>

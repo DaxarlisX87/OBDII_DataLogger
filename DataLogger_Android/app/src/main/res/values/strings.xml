@@ -15,4 +15,7 @@
     <string name="selLog">Select Logfile</string>
     <string name="speed">Speed</string>
     <string name="mpg">MPG</string>
+    <string name="toggleLaunch">Launch\nMarkers</string>
+    <string name="toggleAggressive">Aggressive\nMarkers</string>
+    <string name="toggleMpg">MPG\nMarkers</string>
 </resources>

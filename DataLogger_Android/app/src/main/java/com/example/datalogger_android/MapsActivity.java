@@ -16,6 +16,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -39,6 +40,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private ArrayList<ArrayList<Double>> gpsData = new ArrayList<ArrayList<Double>>();
     private ArrayList<ArrayList<Double>> imuObdData = new ArrayList<ArrayList<Double>>();
     private ArrayList<Polyline> routeData = new ArrayList<Polyline>();
+    private ArrayList<Marker> launchMarkers = new ArrayList<>();
+    private ArrayList<Marker> mpgMarkers = new ArrayList<>();
+    private ArrayList<Marker> aggressiveMarkers = new ArrayList<>();
     private final double minSpeed = 0.0, maxSpeed = 60.0;
     private final double minMPG = 0.0, maxMPG = 60.0;
     private final int[] colorValues = {0xFF0000FF, 0xFF0080FF, 0xFF00FFFF, 0xFF00FF80, 0xFF00FF00, 0xFF80FF00, 0xFFFFFF00, 0xFFFF8000, 0xFFFF0000};
@@ -46,6 +50,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private final double colorSpeedStep = (maxSpeed-minSpeed)/numColorLevels;
     private final double colorMPGStep = (maxMPG-minMPG)/numColorLevels;
     private boolean analysisDone = false;
+    private static final int window = 10;
+    private static final int shift = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +73,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 displayMPG();
+            }
+        });
+        Button mpgTButton = findViewById(R.id.toggleMpg);
+        mpgTButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                toggleMarkers(mpgMarkers);
+            }
+        });
+        Button launchTButton = findViewById(R.id.toggleLaunch);
+        launchTButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) { toggleMarkers(launchMarkers);
+            }
+        });
+        Button aggressiveTButton = findViewById(R.id.toggleAggressive);
+        aggressiveTButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) { toggleMarkers(aggressiveMarkers);
             }
         });
     }
@@ -175,32 +200,54 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ArrayList<DrivingEvent> drivingEvents = DrivingAnalyzer.drivingAnalysis(imuObdData, gpsData);
 
         MarkerOptions mrko;
+        Marker aMarker;
         for(DrivingEvent event: drivingEvents) {
             mrko = new MarkerOptions();
             mrko.position(new LatLng(event.getLatitude(), event.getLongitude()));
-            mrko.flat(true);
+//            mrko.flat(true);
+            mrko.visible(false);
             if(event.getType().equals("BadMPG")) {
                 mrko.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                aMarker = mMap.addMarker(mrko);
+                mpgMarkers.add(aMarker);
             }else if(event.getType().equals("Launch")){
                 mrko.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
-                mrko.zIndex(999999);
+                aMarker = mMap.addMarker(mrko);
+                launchMarkers.add(aMarker);
+//                mrko.zIndex(999999);
 //                mMap.addMarker(mrko);
             }
-            mMap.addMarker(mrko);
+            //mMap.addMarker(mrko);
         }
         svm_model loadedModel;
         try {
             loadedModel = svm.svm_load_model(getFilesDir().toString()+"/model.model");
             ArrayList<ArrayList<svm_node>> dataset = makeDataset(imuFilename);
 //            nodeList.toArray(new svm_node[nodeList.size()]);
-            ArrayList<Double> predictions = new ArrayList<>();
+//            ArrayList<Double> predictions = new ArrayList<>();
             svm_node[] oneNodeSet;
 //            Log.d("PREDICTIONS",dataset.size()+" "+dataset.get(0).size());
+            assert dataset != null;
             for(int i = 0; i < dataset.size(); i++) {
                 oneNodeSet = dataset.get(i).toArray(new svm_node[dataset.get(i).size()]);
                 double d = svm.svm_predict(loadedModel, oneNodeSet);
 //                Log.d("PREDICTIONS","i = "+ i +" Predict: "+d);
-                predictions.add(d);
+//                predictions.add(d);
+                if(d == 1.0){
+                    //found aggressive driving
+                    double aTime = imuObdData.get(i*shift).get(0);// time aggressive event occurred
+                    for(int index = 0; index < routeData.size(); index++){
+                        if(gpsData.get(index).get(0) > aTime){
+                            mrko = new MarkerOptions();
+                            mrko.visible(false);
+                            mrko.position(routeData.get(index).getPoints().get(0));
+//                            mrko.flat(true);
+                            mrko.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                            aMarker = mMap.addMarker(mrko);
+                            aggressiveMarkers.add(aMarker);
+                        }
+                    }
+                }
             }
         } catch (IOException e) {
 //            Log.d("PREDICTIONS","error");
@@ -213,8 +260,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String thisLine;
         ArrayList<ArrayList<svm_node>> nodeList = new ArrayList<>();
         ArrayList<svm_node> oneList = new ArrayList<>();
-        final int window = 10;
-        final int shift = 2;
         double[][] windowdata = new double[window][10];
         String[] Lines = new String[shift];
 //        String classifier = "-1";
@@ -323,7 +368,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public static double[] toDoubleArr(String[] values) {
-        double doubles[] = new double[values.length];
+        double[] doubles = new double[values.length];
         for(int i = 0; i < values.length; i++) {
             doubles[i] = Double.parseDouble(values[i]);
         }
@@ -361,11 +406,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 speed = imuObdData.get(imuObdData.size()-1).get(1);
             }
             //color threshold
-            for(int k = numColorLevels-1; k >= 0; k--){
-                if(speed > k*colorSpeedStep){
-                    routeData.get(i).setColor(colorValues[k]);
-                    break;
-                }
+//            for(int k = numColorLevels-1; k >= 0; k--){
+//                if(speed > k*colorSpeedStep){
+//                    routeData.get(i).setColor(colorValues[k]);
+//                    break;
+//                }
+//            }
+            double speedLimit = 35.0;
+            if(speed < speedLimit){
+                routeData.get(i).setColor(Color.BLUE);
+            }else if(speed < speedLimit+5){
+                routeData.get(i).setColor(Color.YELLOW);
+            }else if(speed < speedLimit+10){
+                routeData.get(i).setColor(0xFFffa500);//hex orange
+            }else{
+                routeData.get(i).setColor(Color.RED);
             }
         }
     }
@@ -404,6 +459,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     break;
                 }
             }
+        }
+    }
+    private void toggleMarkers(ArrayList<Marker> al){
+        if(!analysisDone){
+            return;
+        }
+        for(Marker m : al){
+            m.setVisible(!m.isVisible());
         }
     }
 }
